@@ -6,7 +6,7 @@ media
 *.sqlite3
 *.env
 
-# Accept these files in the repository
+# Примите эти файлы в хранилище
 !.gitignore
 !.travis.yml
 /.env
