@@ -1,13 +1,29 @@
 {
-  "python.pythonPath": "env\\Scripts\\python.exe",
+  "python.pythonPath": "D:/Projects/py/django_project_boilerplate/env/Scripts/python.exe",
+  "python.autoComplete.extraPaths": [
+    "D:/Projects/py/django_project_boilerplate/env/Lib/django",
+  ],
+  "python.autoComplete.addBrackets": true,
   "editor.formatOnSave": true,
   "python.linting.pycodestyleEnabled": true,
   "python.linting.pylintEnabled": true,
   "python.linting.pylintPath": "pylint",
-  "python.linting.pylintArgs": ["W0614", "--load-plugins", "pylint_django"],
+  "python.linting.pylintArgs": [
+    "W0614",
+    "--load-plugins",
+    "pylint_django"
+  ],
   "python.venvPath": "${workspaceFolder}/env/bin/python3",
-  "python.linting.pycodestyleArgs": ["--ignore=E501"],
+  "python.linting.pycodestyleArgs": [
+    "--ignore=E501"
+  ],
   "files.exclude": {
     "**/*.pyc": true
-  }
+  },
+  "files.associations": {
+    "**/templates/*.html": "django-html",
+    "**/templates/*": "django-txt",
+    "**/requirements{/**,*}.{txt,in}": "pip-requirements"
+  },
+  "python.terminal.activateEnvironment": false
 }

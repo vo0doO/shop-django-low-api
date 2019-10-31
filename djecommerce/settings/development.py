@@ -1,7 +1,7 @@
 from .base import *
 
 DEBUG = True
-ALLOWED_HOSTS = ['127.0.0.1']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'voo.asuscomm.com', 'kirsanov.ga', '192.168.1.4']
 
 INSTALLED_APPS += [
     'debug_toolbar'
@@ -44,4 +44,9 @@ DATABASES = {
 }
 
 STRIPE_PUBLIC_KEY = ''
-STRIPE_SECRET_KEY = ''
+STRIPE_SECRET_KEY = "sk_test_4eC39HqLyjWDarjtT1zdp7dc"
+
+ROBO_LOGIN = 'bestboard'
+ROBO_PASS_BESTBOARD_1 = 'rOGKmIVFRbq9o6it01q7'  # prod: "HZQXfkB5d1Fd1zWj3tR3"
+ROBO_PASS_BESTBOARD_2 = 'oisI4I4HRFk8ZYpKxW81'  # prod: "MfIgrQP1oEj80o20pluV"
+ROBO_HASH_ALG = 'sha256'

@@ -24,6 +24,8 @@ class Item(models.Model):
     label = models.CharField(choices=LABEL_CHOICES, max_length=1)
     description = models.TextField()
     slug = models.SlugField()
+    image = models.URLField(blank=True, null=True)
+    img = models.ImageField(blank=True, null=True)
 
     @property
     def is_discount(self):
