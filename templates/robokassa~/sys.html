@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load cart_template_tags %}
+
+
+{% block content %}
+
+<!--Main layout-->
+<main class="mt-5 pt-4">
+  <div class="container wow fadeIn">
+
+    <!-- Heading -->
+    <h2 class="my-5 h2 text-center">Оплата</h2>
+
+    <!--Grid row-->
+    <div class="row">
+
+      <!--Grid column-->
+      <div class="col-md-12 mb-4">
+
+        <!--Card-->
+        <div class="card">
+
+			<form name="form" method="POST" action="{% url 'robokassa:popoln' %}">
+				{% csrf_token %}
+				<input class="btn-us" type="submit" name="submit" value="купить" />
+			</form>
+
+        </div>
+
+        </div>
+        <!--/.Card-->
+      
+      <!--Grid column-->
+      <div class="col-md-12 mb-4">
+
+        <!-- Heading -->
+        <h4 class="d-flex justify-content-between align-items-center mb-3">
+        <span class="text-muted">Ваша корзина</span>
+        <span class="badge badge-secondary badge-pill">{{ request.user|cart_item_count }}</span>
+        </h4>
+
+        <!-- Cart -->
+          {% include "cart_widget.html" %}  
+        <!-- Cart -->
+
+      </div>
+      <!--Grid column-->
+      
+      </div>
+      <!--Grid column-->
+
+    </div>
+    <!--Grid row-->
+
+  </div>
+</main>
+<!--Main layout-->
+{% endblock content %}

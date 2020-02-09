@@ -1,24 +1,29 @@
-from django.utils import timezone
-from .forms import CheckoutForm
-from django.contrib import messages
-from .models import Item, OrderItem, Order, BillingAddress, Payment
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.auth.decorators import login_required
-from django.views.generic import ListView, DetailView, View
-from django.shortcuts import render, get_object_or_404, redirect
-from django.conf import settings
+# TODO: https://www.avito.ru/vyborg/avtomobili/geely_fc_vision_2008_1845368483
 
 import stripe
-stripe.api_key = settings.STRIPE_SECRET_KEY
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import ObjectDoesNotExist
+from django.shortcuts import get_object_or_404, redirect, reverse, render
+from django.utils import timezone
+from django.views.generic import DetailView, ListView, View
+# from robokassa.forms import RobokassaForm
+from typing_extensions import Protocol
+
+from .forms import CheckoutForm
+from .models import BillingAddress, Item, Order, OrderItem, Robo, Stripe, Qiwi
 
 
 class CheckoutView(View):
     def get(self, *args, **kwargs):
+        order = Order.objects.get(user=self.request.user, ordered=False)
         # form
         form = CheckoutForm()
         context = {
-            "form": form
+            "form": form,
+            "order": order
         }
         return render(self.request, "checkout.html", context)
 
@@ -27,32 +32,74 @@ class CheckoutView(View):
         try:
             order = Order.objects.get(user=self.request.user, ordered=False)
             if form.is_valid():
-                street_address = form.cleaned_data.get('street_address')
-                apartment_address = form.cleaned_data.get('apartment_address')
-                country = form.cleaned_data.get('country')
-                zip = form.cleaned_data.get('zip')
-                # TODO: добавить функциональность в эти поля
-                # same_shipping_address = form.cleaned_data.get('same_shipping_address')
-                # save_info = form.cleaned_data.get('save_info')
                 payment_option = form.cleaned_data.get('payment_option')
-                billing_address = BillingAddress(
-                    user=self.request.user,
-                    street_address=street_address,
-                    apartment_address=apartment_address,
-                    country=country,
-                    zip=zip,
-                )
-                billing_address.save()
-                order.billing_address = billing_address
-                order.save()
-
                 if payment_option == "S":
-                    return redirect('core:stripe-payment', payment_option='stripe')
-                elif payment_option == "P":
-                    return redirect('core:payment', payment_option='paypal')
-                else:
-                    messages.warning(self.request, "Ошибка оформления")
-                    return redirect('core:checkout')
+                    street_address = form.cleaned_data.get('street_address')
+                    apartment_address = form.cleaned_data.get('apartment_address')
+                    country = form.cleaned_data.get('country')
+                    zip = form.cleaned_data.get('zip')
+                    # TODO: добавить функциональность в эти поля
+                    # same_shipping_address = form.cleaned_data.get('same_shipping_address')
+                    # save_info = form.cleaned_data.get('save_info')
+                    billing_address = BillingAddress(
+                        user=self.request.user,
+                        street_address=street_address,
+                        apartment_address=apartment_address,
+                        country=country,
+                        zip=zip,
+                    )
+
+                    billing_address.save()
+                    order.billing_address = billing_address
+                    order.save()
+                    return redirect('core:payment-stripe')
+
+                elif payment_option == "R":
+                    street_address = form.cleaned_data.get('street_address')
+                    apartment_address = form.cleaned_data.get('apartment_address')
+                    country = form.cleaned_data.get('country')
+                    zip = form.cleaned_data.get('zip')
+                    # TODO: добавить функциональность в эти поля
+                    # same_shipping_address = form.cleaned_data.get('same_shipping_address')
+                    # save_info = form.cleaned_data.get('save_info')
+                    billing_address = BillingAddress(
+                        user=self.request.user,
+                        street_address=street_address,
+                        apartment_address=apartment_address,
+                        country=country,
+                        zip=zip,
+                    )
+
+                    billing_address.save()
+                    order.billing_address = billing_address
+                    order.save()
+                    return redirect('robokassa:buy')
+
+                elif payment_option == "Q":
+                    street_address = form.cleaned_data.get('street_address')
+                    apartment_address = form.cleaned_data.get('apartment_address')
+                    country = form.cleaned_data.get('country')
+                    zip = form.cleaned_data.get('zip')
+                    # TODO: добавить функциональность в эти поля
+                    # same_shipping_address = form.cleaned_data.get('same_shipping_address')
+                    # save_info = form.cleaned_data.get('save_info')
+                    billing_address = BillingAddress(
+                        user=self.request.user,
+                        street_address=street_address,
+                        apartment_address=apartment_address,
+                        country=country,
+                        zip=zip,
+                    )
+
+                    billing_address.save()
+                    order.billing_address = billing_address
+                    order.save()
+
+                    return redirect('core:payment-qiwi')
+
+            else:
+                messages.warning(self.request, "Ошибка оформления")
+                return redirect('core:checkout')
 
         except ObjectDoesNotExist:
             messages.error(self.request, "У Вас нет активных заказов")
@@ -60,13 +107,16 @@ class CheckoutView(View):
 
 
 class StripePaymentView(View):
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+
     def get(self, *args, **kwarg):
         # order
         order = Order.objects.get(user=self.request.user, ordered=False)
         context = {
-            'order': order
+            'order': order,
+            'STRIPE_SECRET_KEY': settings.STRIPE_SECRET_KEY
         }
-        return render(self.request, 'payment.html', context)
+        return render(self.request, 'stripe/stripe.html', context)
 
     def post(self, *args, **kwargs):
         order = Order.objects.get(user=self.request.user, ordered=False)
@@ -80,7 +130,7 @@ class StripePaymentView(View):
                 source=token)
 
             # создаем объект платежа
-            payment = Payment()
+            payment = Stripe()
             payment.stripe_charge_id = charge['id']
             payment.user = self.request.user
             payment.amount = order.get_total()
@@ -158,6 +208,50 @@ class OrderSummaryView(LoginRequiredMixin, View):
             return redirect("/")
 
 
+class QiwiPayView(LoginRequiredMixin, View):
+    def get(self, *args, **kwargs):
+        order = Order.objects.get(user=self.request.user, ordered=False)
+        context = order.get_qiwi_context()
+        return render(self.request, "qiwi/qiwi.html", context)
+
+    def post(self, *args, **kwargs):
+        order = Order.objects.get(user=self.request.user, ordered=False)
+        token = self.request.POST.get('')
+        amount = int(order.get_total() * 100)
+
+        try:
+            charge = stripe.Charge.create(
+                amount=amount,
+                currency="usd",
+                source=token)
+
+            # создаем объект платежа
+            payment = Qiwi()
+            payment.stripe_charge_id = charge['id']
+            payment.user = self.request.user
+            payment.amount = order.get_total()
+            payment.save()
+
+            # назначить эту оплату этому заказу
+
+            order_items = order.items.all()
+            order_items.update(ordered=True)
+            for item in order_items:
+                item.save()
+
+            order.ordered = True
+            order.payment = payment
+            order.save()
+
+            messages.success(self.request, "Ваш заказ оформлен успешно!")
+            return redirect("/")
+
+        except Exception as e:
+            # Send an email to ourselves
+            messages.error(self.request, "Произошла серьезная ошибка. Вам отправленно e-mail уведомление.")
+            return redirect("/")
+
+
 class HomeView(ListView):
     model = Item
     paginate_by = 10
@@ -198,8 +292,7 @@ def remove_from_cart(request, slug):
     item = get_object_or_404(Item, slug=slug)
     order_qs = Order.objects.filter(
         user=request.user,
-        ordered=False
-        )
+        ordered=False)
     if order_qs.exists():
         order = order_qs[0]
         # проверяем если ордерный предмет в ордере
@@ -207,8 +300,7 @@ def remove_from_cart(request, slug):
             order_item = OrderItem.objects.filter(
                 item=item,
                 user=request.user,
-                ordered=False
-                )[0]
+                ordered=False)[0]
             order.items.remove(order_item)
             messages.info(request, f"{item.title} удален из Вашей корзины")
             return redirect("core:order-summary")
@@ -225,8 +317,7 @@ def remove_single_item_from_cart(request, slug):
     item = get_object_or_404(Item, slug=slug)
     order_qs = Order.objects.filter(
         user=request.user,
-        ordered=False
-        )
+        ordered=False)
     if order_qs.exists():
         order = order_qs[0]
         # проверяем если ордерный предмет в ордере
@@ -234,8 +325,7 @@ def remove_single_item_from_cart(request, slug):
             order_item = OrderItem.objects.filter(
                 item=item,
                 user=request.user,
-                ordered=False
-                )[0]
+                ordered=False)[0]
             if order_item.quantity > 1:
                 order_item.quantity -= 1
                 order_item.save()
@@ -249,3 +339,87 @@ def remove_single_item_from_cart(request, slug):
     else:
         messages.info(request, f"В вашем заказе нет {item.title}")
         return redirect("core:product", slug=slug)
+
+@login_required
+def redirect_home_payment_error(request):
+    messages.error(request, "Ошибка в олате счета")
+    return redirect('/')
+
+@login_required
+def redirect_home_payment_success(request):
+    messages.success(request, "Ваш заказ оформлен успешно!")
+    return redirect('/')
+
+
+
+""" RobokassaViewClass
+        # class RoboPaymentView(View):
+        #     template_name = "payment/robokassa.html"
+
+        #     def get(self, *args, **kwarg):
+        #         # order
+        #         order = Order.objects.get(user=self.request.user, ordered=False)
+        #         form = RobokassaForm(initial={
+        #             'MerchantLogin': 'bestboard',
+        #             'Pass1': 'rOGKmIVFRbq9o6it01q7',
+        #             'OutSum': '200',
+        #             'InvId': '678678',
+        #             # 'OutSum': int(order.get_total() * 100),
+        #             # 'InvId': int(order.id),
+        #             'Desc': str([item.item.title for item in order.items.all()]),
+        #             'Email': self.request.user.email or 'user@example.com',
+        #             'isTest': True,
+        #             'Culture': 'ru'
+        #         })
+
+        #         return request('core:payment-robo', {"form": form})
+
+        #     def post(self, *args, **kwargs):
+        #         order = Order.objects.get(user=self.request.user, ordered=False)
+        #         amount = int(order.get_total() * 100)
+
+        #         try:
+        #             # создаем объект платежа
+        #             payment = Robo()
+        #             payment.user = self.request.user
+        #             payment.amount = order.get_total()
+        #             payment.InvId = self.request.POST.get("InvId")
+        #             payment.save()
+
+        #             # назначить эту оплату этому заказу
+
+        #             order_items = order.items.all()
+        #             order_items.update(ordered=True)
+        #             for item in order_items:
+        #                 item.save()
+
+        #             order.ordered = True
+        #             order.payment = payment
+        #             order.save()
+
+        #             messages.success(self.request, "Ваш заказ оформлен успешно!")
+        #             return redirect("/")
+
+        #         except Exception as e:
+        #             # Send an email to ourselves
+        #             messages.error(self.request, "Произошла серьезная ошибка. Вам отправленно e-mail уведомление.")
+        #             return redirect("/")
+
+
+        # @login_required
+        # def pay_with_robokassa(request):
+        #     order = Order.objects.get(user=request.user, ordered=False)
+
+        #     form = RobokassaForm(initial={
+        #             'MerchantLogin': 'bestboard',
+        #             'Pass1': 'rOGKmIVFRbq9o6it01q7',
+        #             'OutSum': str(int(order.get_total() * 100)),
+        #             'InvId': str(int(order.id)),
+        #             'Desc': str([item.item.title for item in order.items.all()]),
+        #             'isTest': 1,
+        #             })
+
+        #     robo_url = form.get_redirect_url()
+        #     # return redirect(robo_url)
+        #     return render(request, form.target, context)
+"""

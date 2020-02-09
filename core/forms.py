@@ -1,13 +1,17 @@
 from django import forms
 from django_countries.fields import CountryField
 from django_countries.widgets import CountrySelectWidget
+from hashlib import md5
+from urllib.parse import urlencode
+from django import forms
 
 
 PAYMENT_CHOICES = (
     ('S', 'Stripe'),
-    ('P', 'PayPal')
+    ('R', 'Robokassa'),
+    ('Q', 'Qiwi'),
 )
-
+ 
 
 class CheckoutForm(forms.Form):
     street_address = forms.CharField(widget=forms.TextInput(attrs={

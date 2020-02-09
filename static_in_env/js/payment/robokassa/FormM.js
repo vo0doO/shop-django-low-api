@@ -1,0 +1,1 @@
+document.write("<iframe width=\"300\" height=\"60\" style=\"border:0;width:300px;height:60px;overflow:hidden;background-color:transparent;\" allowTransparency=\"true\" src=\"https://auth.robokassa.ru/Merchant/PaymentForm/FormM.if\"></iframe>");

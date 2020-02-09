@@ -14,9 +14,10 @@ def cart_item_count(user):
 
 
 @register.filter
-def short_item_description(slug):
-    item = Item.objects.get(slug=slug)
-    if len(item.description) > 100:
-        short_description = f"{item.description[0:97]}..."
+def short_item_description(order_item):
+    lines = str(order_item.item.description).split("\r", 1)
+    if len(lines) > 35:
+        short_description = f"{str(lines[0])[0:32]}..."
         return short_description
-    return item.description
+    else:
+        return f"{str(lines[0])}..."

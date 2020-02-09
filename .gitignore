@@ -9,5 +9,6 @@ media
 # Примите эти файлы в хранилище
 !.gitignore
 !.travis.yml
-/.env
+/env
 /.vscode
+/.idea

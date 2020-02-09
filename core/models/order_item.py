@@ -1,7 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.shortcuts import reverse
-from .item import Item
+from core.models import Item
 
 
 class OrderItem(models.Model):
