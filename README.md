@@ -2,7 +2,10 @@
 
 ## TODO
 
-Steps:
+## Steps:
 
-1. Handle of Robokassa success payment signal
-2. Form for write in data base of Qiwi success payment https post request
+### Handle of Robokassa success payment signal:
+  - [https://github.com/mpyrev/django-robokassa];
+  - [https://docs.robokassa.ru/#4154];
+
+### Form for write in data base of Qiwi success payment https post request
